@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            Int           @id @default(autoincrement())
+  ProductName   String
+  Description   String?
+  Price         Float
+  StockQuantity Int
+  ImageURL      String?
+  CategoryID    Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  ProductStatus String
+  Category      Category      @relation(fields: [CategoryID], references: [id])
+  OrderDetails  OrderDetail[]
+
+  SalesInvoiceDetail SalesInvoiceDetail[]
+}
+
+model Category {
+  id           Int       @id @default(autoincrement())
+  categoryName String
+  description  String?
+  products     Product[]
+}
+
+model User {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  name             String?
+  password         String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  isActive         Boolean        @default(true)
+  phone            String?
+  address          String?
+  profileImage     String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  isAdmin          Boolean        @default(false)
+  role             Int
+
+
+  SalesInvoices    SalesInvoice[]
+  // Add any additional fields as needed
+  ordeUser         ordeUser[]
+}
+
+model ordeUser {
+  id      Int @id @default(autoincrement())
+  userId  Int
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+  user    User  @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id              Int            @id @default(autoincrement())
+  orderDate       DateTime       @default(now())
+  orderStatus     String
+  totalAmount     Float
+  shippingAddress String?
+  billingAddress  String?
+   orderDetails    OrderDetail[]
+  payments        Payment[]
+  ordeUser        ordeUser[]
+  SalesInvoice    SalesInvoice[]
+  
+}
+
+model OrderDetail {
+  id        Int     @id @default(autoincrement())
+  orderID   Int
+  productID Int
+  quantity  Int
+  unitPrice Float
+  subtotal  Float
+  order     Order   @relation(fields: [orderID], references: [id])
+  product   Product @relation(fields: [productID], references: [id])
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  orderID       Int
+  paymentMethod Int
+  paymentStatus Int
+  paymentDate   DateTime @default(now())
+  order         Order    @relation(fields: [orderID], references: [id])
+}
+
+model SalesInvoice {
+  id                  Int                  @id @default(autoincrement())
+  userId              Int
+  orderID             Int
+  invoiceDate         DateTime             @default(now())
+  totalAmount         Float
+  paymentStatus       String
+  dueDate             DateTime?
+  customer            User                 @relation(fields: [userId], references: [id])
+  order               Order                @relation(fields: [orderID], references: [id])
+  salesInvoiceDetails SalesInvoiceDetail[]
+}
+
+model SalesInvoiceDetail {
+  id             Int          @id @default(autoincrement())
+  salesInvoiceID Int
+  productID      Int
+  quantity       Int
+  unitPrice      Float
+  Subtotal       Float
+  salesInvoice   SalesInvoice @relation(fields: [salesInvoiceID], references: [id])
+  product        Product      @relation(fields: [productID], references: [id])
+}
