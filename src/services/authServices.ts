@@ -19,7 +19,6 @@ export class authServices {
             delete userFilter.page;
             delete userFilter.pageSize;
             delete userFilter.include
-    
             if (include) {
                 const convertTopLevel = convertTopLevelStringBooleans(include);
                 include = convertTopLevel;
@@ -62,10 +61,14 @@ export class authServices {
 
   static async registration(userData: any) 
   {
-    // try {
+    try {
             const { email, password } = userData;
             const roleId = userData.roleId;
             delete userData.roleId;
+            const roleIdExist=await prisma.role.findUnique({where:{id:roleId}})
+            if(!roleIdExist){
+                throw new NotFoundError(`roleId ${roleId} not exist`)
+            }
             const existUser = await prisma.user.findFirst({
             where: {
                 email: email,
@@ -82,23 +85,28 @@ export class authServices {
             password: passwordhash
             },
             });
-            await prisma.userRole.create({
-                data: {
-                  userId: user.id,
-                  roleId: roleId
-                }
+           
+              
+                await prisma.userRole.create({
+                    data: {
+                      userId: user.id,
+                      roleId: roleId
+                    }
+                    
+                })
                 
-            })
+        
+          
             return user
 
+    }
+    catch (error: any) {
+        if(error instanceof NotFoundError){
+            throw error 
+        }
+        throw new DatabaseError("Error creating user in server"  );
         
-    // }catch (error: any) {
-    //     if(error instanceof NotFoundError){
-    //         throw error 
-    //     }
-    //     throw new DatabaseError("Error creating user in server"  );
-        
-    // }
+    }
   }
 
   static login(req: Request<import("express-serve-static-core").ParamsDictionary, any, any, import("qs").ParsedQs, Record<string, any>>, res: Response<any, Record<string, any>>, next: NextFunction) {
