@@ -38,29 +38,43 @@ model Category {
 }
 
 model User {
-  id               Int            @id @default(autoincrement())
-  email            String         @unique
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
   name             String?
   password         String
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  isActive         Boolean        @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  isActive         Boolean   @default(true)
   phone            String?
   address          String?
   profileImage     String?
   resetToken       String?
   resetTokenExpiry DateTime?
-  isAdmin          Boolean        @default(false)
-  role             Int
-
-
-  SalesInvoices    SalesInvoice[]
+  isAdmin          Boolean   @default(false)
+   SalesInvoices SalesInvoice[]
   // Add any additional fields as needed
-  ordeUser         ordeUser[]
+  ordeUser      ordeUser[]
+
+  UserRole UserRole[]
+}
+
+model Role{
+  id   Int    @unique  @default(autoincrement())
+  name  String 
+ 
+
+  UserRole UserRole[]
+}
+model UserRole{
+  id Int @unique @default(autoincrement())
+  userId Int
+  roleId Int
+  user User @relation(fields: [userId],references: [id])
+  role Role @relation(fields: [roleId],references: [id])
 }
 
 model ordeUser {
-  id      Int @id @default(autoincrement())
+  id      Int   @id @default(autoincrement())
   userId  Int
   orderId Int
   order   Order @relation(fields: [orderId], references: [id])
@@ -74,11 +88,10 @@ model Order {
   totalAmount     Float
   shippingAddress String?
   billingAddress  String?
-   orderDetails    OrderDetail[]
+  orderDetails    OrderDetail[]
   payments        Payment[]
   ordeUser        ordeUser[]
   SalesInvoice    SalesInvoice[]
-  
 }
 
 model OrderDetail {
